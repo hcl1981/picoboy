@@ -1,0 +1,11 @@
+Das Beispiel aus dem folgenden Link lässt sich auch auf dem Picoboy ausführen.
+
+https://www.instructables.com/Respberry-Pi-Pico-W-Generating-Tones-With-Programm/
+
+Dazu muss die Ausgabe auf Pin 15 umgestellt werden. Aus der Zeile 
+
+sm = rp2.StateMachine(0, wave_prog, freq=1953125, set_base=Pin(5)) 
+
+wird also
+
+sm = rp2.StateMachine(0, wave_prog, freq=1953125, set_base=Pin(15)) 
