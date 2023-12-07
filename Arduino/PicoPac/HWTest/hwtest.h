@@ -1,0 +1,238 @@
+#include <Wire.h>
+#include "STK8BA58.h"
+
+class HWTest {
+	private:
+    U8G2 u8g2;
+	double lastX = 0;
+	double lastY = 0;
+	unsigned long lastMillis = 0;
+	Sensor sens;
+	public:
+    HWTest (U8G2 &u8g2P)
+    {
+		u8g2 = u8g2P;
+	}
+	
+	void rotate(float array[][3], int len, float q, byte axis, int xOff, int yOff, int zOff)
+	{
+		float a, b, temp;
+		float cosq = cos(q);
+		float sinq = sin(q);
+		
+		if (axis == xAxis)
+		{
+			for (int i = 0; i < len; i++)
+			{
+				a = array[i][1] - yOff;
+				b = array[i][2] - zOff;
+				temp = a * cosq - b * sinq;
+				b = a * sinq + b * cosq;
+				a = temp;
+				array[i][1] = a + yOff;
+				array[i][2] = b + zOff;
+			}
+		}
+		else if (axis == yAxis)
+		{
+			for (int i = 0; i < len; i++)
+			{
+				a = array[i][0] - xOff;
+				b = array[i][2] - zOff;
+				temp = a * cosq - b * sinq;
+				b = a * sinq + b * cosq;
+				a = temp;
+				array[i][0] = a + xOff;
+				array[i][2] = b + zOff;
+			}
+		}
+		else if (axis == zAxis)
+		{
+			for (int i = 0; i < len; i++)
+			{
+				a = array[i][0] - xOff;
+				b = array[i][1] - yOff;
+				temp = a * cosq - b * sinq;
+				b = a * sinq + b * cosq;
+				a = temp;
+				array[i][0] = a + xOff;
+				array[i][1] = b + yOff;
+			}
+		}
+	}
+	
+	void draw_cube(unsigned char cube2d[][2])
+	{
+		u8g2.drawLine(cube2d[0][0], cube2d[0][1], cube2d[1][0], cube2d[1][1]);
+		u8g2.drawLine(cube2d[0][0], cube2d[0][1], cube2d[2][0], cube2d[2][1]);
+		u8g2.drawLine(cube2d[0][0], cube2d[0][1], cube2d[4][0], cube2d[4][1]);
+		u8g2.drawLine(cube2d[1][0], cube2d[1][1], cube2d[5][0], cube2d[5][1]);
+		u8g2.drawLine(cube2d[1][0], cube2d[1][1], cube2d[3][0], cube2d[3][1]);
+		u8g2.drawLine(cube2d[2][0], cube2d[2][1], cube2d[6][0], cube2d[6][1]);
+		u8g2.drawLine(cube2d[2][0], cube2d[2][1], cube2d[3][0], cube2d[3][1]);
+		u8g2.drawLine(cube2d[4][0], cube2d[4][1], cube2d[6][0], cube2d[6][1]);
+		u8g2.drawLine(cube2d[4][0], cube2d[4][1], cube2d[5][0], cube2d[5][1]);
+		u8g2.drawLine(cube2d[7][0], cube2d[7][1], cube2d[6][0], cube2d[6][1]);
+		u8g2.drawLine(cube2d[7][0], cube2d[7][1], cube2d[3][0], cube2d[3][1]);
+		u8g2.drawLine(cube2d[7][0], cube2d[7][1], cube2d[5][0], cube2d[5][1]);
+	}
+	
+	void printcube(float cube3d[][3], unsigned char cube2d[][2], float &view_plane)
+	{
+		for (byte i = 0; i < 8; i++)
+		{
+			cube2d[i][0] = (unsigned char)((cube3d[i][0] * view_plane / cube3d[i][2]) + 32);
+			cube2d[i][1] = (unsigned char)((cube3d[i][1] * view_plane / cube3d[i][2]) + 64);
+		}
+		
+		u8g2.clearBuffer();
+		draw_cube(cube2d);
+		
+		if (digitalRead(KEY_LEFT) == LOW) {
+			u8g2.drawDisc(32, -1, 5);
+		}
+		if (digitalRead(KEY_RIGHT) == LOW) {
+			u8g2.drawDisc(32, 128, 5);
+		}
+		
+		if (digitalRead(KEY_UP) == LOW) {
+			u8g2.drawDisc(64, 64, 5);
+		}
+		
+		if (digitalRead(KEY_DOWN) == LOW) {
+			u8g2.drawDisc(-1, 64, 5);
+		}
+		
+		if (digitalRead(KEY_CENTER) == LOW) {
+			u8g2.drawDisc(32, 64, 5);
+		}
+		
+		u8g2.sendBuffer();
+	}
+	
+	void cube(double x, double y, double z)
+	{
+		const float zOff = 150;
+		const float xOff = 0;
+		const float yOff = 0;
+		const float size = 40;
+		float view_plane = 64;
+		
+		float cube3Dorig[8][3] = {
+			{xOff - size, yOff + size, zOff - size},
+			{xOff + size, yOff + size, zOff - size},
+			{xOff - size, yOff - size, zOff - size},
+			{xOff + size, yOff - size, zOff - size},
+			{xOff - size, yOff + size, zOff + size},
+			{xOff + size, yOff + size, zOff + size},
+			{xOff - size, yOff - size, zOff + size},
+			{xOff + size, yOff - size, zOff + size}
+		};
+		
+		
+		float cube3d[8][3] = {
+			{xOff - size, yOff + size, zOff - size},
+			{xOff + size, yOff + size, zOff - size},
+			{xOff - size, yOff - size, zOff - size},
+			{xOff + size, yOff - size, zOff - size},
+			{xOff - size, yOff + size, zOff + size},
+			{xOff + size, yOff + size, zOff + size},
+			{xOff - size, yOff - size, zOff + size},
+			{xOff + size, yOff - size, zOff + size}
+		};
+		
+		unsigned char cube2d[8][2];
+		
+		view_plane = 55;
+		
+		for (int i = 0; i < 8; i++) {
+			for (int j = 0; j < 3; j++) {
+				cube3d[i][j] = cube3Dorig[i][j];
+			}
+		}
+		
+		rotate(cube3d, 8, (x), yAxis, xOff, yOff, zOff);
+		rotate(cube3d, 8, (y), xAxis, xOff, yOff, zOff);
+		rotate(cube3d, 8, (z), zAxis, xOff, yOff, zOff);
+		
+		printcube(cube3d, cube2d, view_plane);
+		
+		u8g2.sendBuffer();
+	}
+	
+	
+	void tick()
+	{
+		digitalWrite(LEDR, HIGH);
+		for (int i = 0; i < 100; i++)
+		{
+			digitalWrite(SPEAKER, HIGH);
+			delayMicroseconds(120);
+			digitalWrite(SPEAKER, LOW);
+			delayMicroseconds(120);
+		}
+		
+		delay(300);
+		for (int i = 0; i < 100; i++)
+		{
+			digitalWrite(SPEAKER, HIGH);
+			delayMicroseconds(120);
+			digitalWrite(SPEAKER, LOW);
+			delayMicroseconds(120);
+		}
+		
+		delay(300);
+		for (int i = 0; i < 100; i++)
+		{
+			digitalWrite(SPEAKER, HIGH);
+			delayMicroseconds(120);
+			digitalWrite(SPEAKER, LOW);
+			delayMicroseconds(120);
+		}
+		
+	}
+	
+	void run(void) {
+		
+		u8g2.setFont(u8g2_font_smart_patrol_nbp_tr);
+		u8g2.setFontDirection(1);
+		u8g2.clearBuffer();
+		
+		u8g2.setCursor(32, 63 - u8g2.getStrWidth("bip bip bip") / 2);
+		
+		u8g2.println("bip bip bip");
+		
+		u8g2.sendBuffer();
+		
+		Serial.begin(115200);
+		sens.init();	
+		uint8_t readData = 0;
+		
+		digitalWrite(LEDG, HIGH);
+		digitalWrite(LEDY, HIGH);
+		digitalWrite(LEDR, HIGH);
+		tick();
+		digitalWrite(LEDG, LOW);
+		digitalWrite(LEDY, LOW);
+		digitalWrite(LEDR, LOW);
+		while(true){
+			delay(1);
+			
+			double AcX = sens.xAccG();
+			double AcY = sens.yAccG();
+			double AcZ = sens.zAccG();
+			
+			double xAng = AcX * 90;
+			double yAng = AcY * 90;
+			double zAng = AcZ * 90;
+			
+			double x = (atan2(-yAng, -zAng) + PI);
+			double y = (atan2(-xAng, -zAng) + PI);
+			
+			cube(-((y + lastY) / 2.0), (x + lastX) / 2.0, 0);
+			
+			lastX = x;
+			lastY = y;
+		}
+	}
+};
