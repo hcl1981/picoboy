@@ -456,7 +456,6 @@ class TABman {
 				if (score > eepromReadInt(4) || hiscore)
 				{
 					eepromWriteInt(4, score);
-					EEPROM.commit();
 					//u8g2.getStrWidth("YOUR")
 					u8g2.setCursor(37, 19);
 					u8g2.println("HI-SCORE");
@@ -680,7 +679,7 @@ class TABman {
 		//vorbei..
 	}
 	void run(){
-	set_sys_clock_khz(133000, true);
+	set_sys_clock_khz(125000, true);
 		u8g2.setFontDirection(1);
 		while (true)
 		{

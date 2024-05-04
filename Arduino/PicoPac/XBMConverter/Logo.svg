@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="128"
+   height="64"
+   viewBox="0 0 33.866666 16.933334"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
+   sodipodi:docname="Logo.svg"
+   inkscape:export-filename="C:\Users\hcl19\Rastergrafik.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     units="px"
+     inkscape:zoom="7.2466938"
+     inkscape:cx="77.138626"
+     inkscape:cy="10.625535"
+     inkscape:window-width="1363"
+     inkscape:window-height="1009"
+     inkscape:window-x="102"
+     inkscape:window-y="83"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:4;stop-color:#000000"
+       id="rect12132"
+       width="40.687763"
+       height="21.066759"
+       x="-4.2715921"
+       y="-1.7419598"
+       inkscape:export-filename="C:\Users\hcl19\Documents\KiCAD_Projekte\PicoBoy0402\Software\TABman\XBMConverter\Logo.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
+    <text
+       xml:space="preserve"
+       style="font-size:7.56707px;line-height:0.65;font-family:Calibri;-inkscape-font-specification:Calibri;fill:#ffffff;fill-opacity:1;stroke-width:0.236471"
+       x="15.448758"
+       y="5.0106492"
+       id="text6860"><tspan
+         sodipodi:role="line"
+         id="tspan6858"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.56707px;font-family:Airstrike;-inkscape-font-specification:Airstrike;fill:#ffffff;fill-opacity:1;stroke-width:0.236471"
+         x="15.448758"
+         y="5.0106492">TAB</tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.56707px;font-family:Airstrike;-inkscape-font-specification:Airstrike;fill:#ffffff;fill-opacity:1;stroke-width:0.236471"
+         x="15.448758"
+         y="10.422749"
+         id="tspan6862">MAN</tspan></text>
+    <g
+       id="g15323"
+       transform="rotate(-24,5.4567835,9.5483232)">
+      <g
+         id="g14705"
+         transform="matrix(1.0270084,0,0,1.0270084,-0.59444718,0.85298585)">
+        <path
+           style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+           id="path4510"
+           sodipodi:type="arc"
+           sodipodi:cx="4.1565542"
+           sodipodi:cy="8.4666662"
+           sodipodi:rx="8.2872915"
+           sodipodi:ry="8.2872915"
+           sodipodi:start="0.52359878"
+           sodipodi:end="5.7595865"
+           sodipodi:arc-type="slice"
+           d="M 11.333559,12.610312 A 8.2872915,8.2872915 0 0 1 2.0116454,16.471575 8.2872915,8.2872915 0 0 1 -4.1307373,8.4666662 8.2872915,8.2872915 0 0 1 2.0116452,0.46175735 8.2872915,8.2872915 0 0 1 11.333559,4.3230202 l -7.1770048,4.143646 z" />
+        <circle
+           style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:15.1181;stop-color:#000000"
+           id="path13406"
+           cx="3.7692983"
+           cy="3.6660297"
+           r="0.77451319" />
+      </g>
+      <g
+         id="g15287"
+         transform="rotate(24,5.4199532,14.629844)">
+        <circle
+           style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:15.5264;stop-color:#000000"
+           id="path13406-6"
+           cx="4.6246672"
+           cy="10.488"
+           r="1.2078986"
+           transform="rotate(-24)" />
+        <circle
+           style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:15.5264;stop-color:#000000"
+           id="path13406-6-2"
+           cx="8.6368484"
+           cy="10.488"
+           r="1.2078986"
+           transform="rotate(-24)" />
+      </g>
+    </g>
+  </g>
+</svg>

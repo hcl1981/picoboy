@@ -29,6 +29,8 @@ U8G2_SH1106_128X64_NONAME_F_4W_HW_SPI u8g2(U8G2_R3, /* cs=*/10, /* dc=*/8, /* re
 #include "Demo/demo.h"
 #include "Conway/conway.h"
 #include "HWTest/hwtest.h"
+#include "Memor/memor.h"
+#include "Sensy/sensy.h"
 
 void setup(void)
 {
@@ -48,6 +50,14 @@ void setup(void)
   if (eepromReadInt(4) >= 65500)
   {
     eepromWriteInt(4, 0);
+  }
+  if (eepromReadInt(6) >= 65500)
+  {
+    eepromWriteInt(6, 0);
+  }
+  if (eepromReadInt(8) >= 65500)
+  {
+    eepromWriteInt(8, 0);
   }
   
   u8g2.begin();
@@ -86,23 +96,34 @@ void setup(void)
     TABman tab(u8g2);
     tab.run();
   }
-  else if (gameID == 4)
+  else if (gameID == 6)
   {
     Demo dem(u8g2);
     dem.run();
 
   }
-  else if (gameID == 5)
+  else if (gameID == 7)
   {
     Conway con(u8g2);
     con.run();
 
   }
-  else if (gameID == 6)
+  else if (gameID == 8)
   {
     HWTest hwt(u8g2);
     hwt.run();
   }
+  else if (gameID == 5)
+  {
+    Memor mem(u8g2);
+    mem.run();
+  }
+    else if (gameID == 4)
+  {
+    Sensy sen(u8g2);
+    sen.run();
+  }
+  
 }
 
 void loop() {}

@@ -679,7 +679,8 @@ class TABman {
 		//vorbei..
 	}
 	void run(){
-	set_sys_clock_khz(133000, true);
+	//set_sys_clock_khz(125000, true);
+	set_sys_clock_khz(50000, true);
 		u8g2.setFontDirection(1);
 		while (true)
 		{
