@@ -70,11 +70,11 @@ def score():
     global laenge
     punkte = laenge - 3  # Punkte = (Schlangenlänge - 3)
     # Wir zeigen die letzten drei Stellen des Punktezählers an (Hunderter, Zehner, Einer)
-    pb.text(str(punkte % 10), 120, 43, 1)
+    pb.text(str(punkte % 10), 121, 38, 1)
     punkte = punkte // 10
-    pb.text(str(punkte % 10), 120, 33, 1)
+    pb.text(str(punkte % 10), 121, 28, 1)
     punkte = punkte // 10
-    pb.text(str(punkte % 10), 120, 23, 1)
+    pb.text(str(punkte % 10), 121, 18, 1)
 
 def spielfeldZeichnen():
     """
@@ -164,7 +164,7 @@ def gameOverScreen():
 
     pb.text("Game Over!", 18, 18)
     pb.text("Score:", 18, 28)
-    pb.text(str(laenge - 3), 60, 28)
+    pb.text(str(laenge - 3), 70, 28)
     pb.show()
 
     # Kurz warten, damit der Spieler den Score sehen kann
@@ -208,3 +208,4 @@ while True:
     while time.ticks_diff(time.ticks_us(), last) < 75000:
         pass
     last = time.ticks_us()
+
