@@ -230,6 +230,20 @@ class PicoBoy(SH1106):
         if cs is not None:
             cs.init(cs.OUT, value=1)
         self.spi = spi
+        # Den Bus EINMAL einstellen -- erzeugt wird er oben mit 1 MHz,
+        # polarity=1, phase=1, betrieben wird das Display mit self.rate
+        # (10 MHz angefordert, 8 MHz erreicht), polarity=0, phase=0.
+        #
+        # Frueher stand dieses init() in write_cmd() und write_data(),
+        # also vor JEDEM einzelnen Byte. Am Geraet gemessen kostet es
+        # 686 us je Aufruf, waehrend die eigentliche Arbeit 114 us
+        # braucht. Bei 32 Aufrufen je Bild gingen so 17 der 22 ms
+        # drauf, die ein pb.show() brauchte.
+        #
+        # Der SH1106-Treiber, von dem diese Datei abstammt
+        # (github.com/robert-hh/SH1106), haelt es wie hier: der Bus
+        # wird einmal eingestellt, der Treiber ruehrt ihn nicht mehr an.
+        spi.init(baudrate=self.rate, polarity=0, phase=0)
         self.dc = dc
         self.res = res
         self.cs = cs
@@ -263,7 +277,6 @@ class PicoBoy(SH1106):
         time.sleep_ms(millis)
 
     def write_cmd(self, cmd):
-        self.spi.init(baudrate=self.rate, polarity=0, phase=0)
         if self.cs is not None:
             self.cs(1)
             self.dc(0)
@@ -275,7 +288,6 @@ class PicoBoy(SH1106):
             self.spi.write(bytearray([cmd]))
 
     def write_data(self, buf):
-        self.spi.init(baudrate=self.rate, polarity=0, phase=0)
         if self.cs is not None:
             self.cs(1)
             self.dc(1)
