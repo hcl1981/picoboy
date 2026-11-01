@@ -1,6 +1,7 @@
 from picoboy import PicoBoy
 import time
 import random
+import machine
 
 # Spielfeldgrößen
 xSize = 29

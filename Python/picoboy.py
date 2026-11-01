@@ -138,8 +138,8 @@ class SH1106(framebuf.FrameBuffer):
             return super().pixel(x, y)
         else:
             super().pixel(x, y, color)
-            page = y // 8
-            self.pages_to_update |= 1 << page
+            if 0 <= y < self.height:
+                self.pages_to_update |= 1 << (y // 8)
     
 
     def text(self, text, x, y, color=1):
@@ -324,7 +324,7 @@ class PicoBoy(SH1106):
         i2c.writeto(DEV_ADDR, bytes([ZOUT1]))
         data = i2c.readfrom(DEV_ADDR, 2)
         value = int(data[0] / 16) + data[1] * 16 
-        if value > 2048:
+        if value >= 2048:
             value = value-4096
         return value/1024
     

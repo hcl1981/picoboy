@@ -12,9 +12,14 @@ Da der PicoBoy kompatibel zum Raspberry Pi Pico und zur Arduino-Umgebung ist, fi
 * 2 MB Flash
 * 264 KB RAM
 * USB-C-Schnittstelle zur Programmierung und Datenübertragung
-* 3 vorinstallierte Spiele
+* Spielesammlung PicoPac vorinstalliert
 * 5-Wege-Joystick
-* Beschleunigungssensor (jetzt auch in Python verwendbar!)
+* Beschleunigungssensor
 * Spannungsversorgung über USB-C oder eine CR2032-Knopfzelle
+
+# Firmware und Werkzeuge
+Im Ordner [Firmware](Firmware) liegt MicroPython 1.29 für den PicoBoy, mit eingebauter `picoboy.py` und Startmenü. Zum Aufspielen BOOT gedrückt halten, RES kurz drücken und die `.uf2`-Datei auf das Laufwerk `RPI-RP2` kopieren.
+
+Programmieren geht direkt im Browser mit dem [PicoBoy Studio](https://picoboy.de/studio/), am besten in Google Chrome.
 
 Weitere Informationen: [picoboy.de](https://www.picoboy.de/)
