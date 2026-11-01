@@ -25,7 +25,7 @@ U8G2_SH1106_128X64_NONAME_F_4W_HW_SPI u8g2(U8G2_R3, /* cs=*/10, /* dc=*/8, /* re
 #include "TABman/tabman.h"
 #include "SCLange/sclange.h"
 #include "PICtris/pictris.h"
-#include "Misc/StarIntro.h"
+#include "Misc/starintro.h"
 #include "Demo/demo.h"
 #include "Conway/conway.h"
 #include "HWTest/hwtest.h"
