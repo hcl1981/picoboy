@@ -1,0 +1,38 @@
+Emulator des PicoBoy Studio
+===========================
+
+Der Emulator im Studio ist ein eigener WebAssembly-Build aus derselben
+MicroPython-Quelle wie die Firmware. Er hat denselben Speicher, dieselben
+Module und dieselbe picoboy.py wie das Geraet. Hier liegt alles, was zum
+Neubau gebraucht wird:
+
+  micropython-1.29.0.patch   kleine Eingriffe in MicroPython 1.29.0
+  picoboy/                   die Variante: nachgebaute Hardware (machine,
+                             _rp2, _onewire, _thread), Tempobremse, Bauskript
+
+Bauen
+-----
+Gebraucht werden git, Docker und das Image emscripten/emsdk:3.1.74.
+
+  git clone --branch v1.29.0 https://github.com/micropython/micropython.git
+  cd micropython
+  git submodule update --init lib/micropython-lib lib/mbedtls
+  git apply <dieses Repository>/Firmware/emulator/micropython-1.29.0.patch
+  cp -r <dieses Repository>/Firmware/emulator/picoboy ports/webassembly/variants/
+  mkdir -p ports/rp2/boards/PICOBOY
+  cp -r <dieses Repository>/Firmware/quelltext/. ports/rp2/boards/PICOBOY/
+  sh ports/webassembly/variants/picoboy/baue.sh
+
+Ergebnis in ports/webassembly/build-picoboy:
+
+  micropython.mjs   wird zu assets/pb-micropython-1.29.0.mjs im Studio
+  micropython.wasm  wird zu assets/pb-micropython-1.29.0.wasm im Studio
+
+picoboy.py, startmenu.py und _boot.py werden aus Firmware/quelltext/modules
+eingefroren. Aendert sich eine davon, muss auch der Emulator neu gebaut werden.
+
+Abstimmen
+---------
+Die Bremswerte der Zeichenbefehle stehen in picoboy/modules/_pbtakt.py. Die
+Heap-Groesse (HEAP_BYTES) und die Grundlast je Interpreterschritt (HOOK_US)
+stehen im Worker in der index.html des Studios.
