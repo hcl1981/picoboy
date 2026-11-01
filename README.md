@@ -23,3 +23,6 @@ Im Ordner [Firmware](Firmware) liegt MicroPython 1.29 für den PicoBoy, mit eing
 Programmieren geht direkt im Browser mit dem [PicoBoy Studio](https://picoboy.de/studio/), am besten in Google Chrome.
 
 Weitere Informationen: [picoboy.de](https://www.picoboy.de/)
+
+# Lizenz
+MIT, siehe [LICENSE](LICENSE). `picoboy.py` enthält Code von Radomir Dopieralski und anderen unter MIT, der Vermerk steht in der Datei. Die Firmware baut auf MicroPython auf, ebenfalls MIT: [Firmware/LICENSE-micropython.txt](Firmware/LICENSE-micropython.txt).
