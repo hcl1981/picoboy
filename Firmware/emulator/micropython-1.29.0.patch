@@ -1,0 +1,255 @@
+diff --git a/ports/webassembly/Makefile b/ports/webassembly/Makefile
+index 827cd46aa..ed3ef0a69 100644
+--- a/ports/webassembly/Makefile
++++ b/ports/webassembly/Makefile
+@@ -45,7 +45,7 @@ INC += -I$(TOP)
+ INC += -I$(BUILD)
+ INC += -I$(VARIANT_DIR)
+ 
+-CFLAGS += -std=c99 -Wall -Werror -Wdouble-promotion -Wfloat-conversion
++CFLAGS += -std=c99 -Wall -Werror $(if $(filter picoboy,$(VARIANT)),,-Wdouble-promotion -Wfloat-conversion)
+ CFLAGS += -Os -DNDEBUG
+ CFLAGS += $(INC)
+ 
+@@ -105,6 +105,10 @@ SRC_SHARED = $(addprefix shared/,\
+ 	timeutils/timeutils.c \
+ 	)
+ 
++ifeq ($(VARIANT),picoboy)
++SRC_SHARED += shared/runtime/sys_stdio_mphal.c
++endif
++
+ SRC_C += \
+ 	lexer_dedent.c \
+ 	main.c \
+diff --git a/ports/webassembly/library.js b/ports/webassembly/library.js
+index 6fcd9f2e2..8afb00303 100644
+--- a/ports/webassembly/library.js
++++ b/ports/webassembly/library.js
+@@ -64,7 +64,7 @@ mergeInto(LibraryManager.library, {
+         }
+     },
+ 
+-    mp_js_time_ms: () => Date.now(),
++    mp_js_time_ms: () => Date.now() + (globalThis.__pb_zeit || 0),
+ 
+     // Node prior to v19 did not expose "crypto" as a global, so make sure it exists.
+     mp_js_random_u32__postset:
+diff --git a/ports/webassembly/main.c b/ports/webassembly/main.c
+index 670d404da..0f93bace3 100644
+--- a/ports/webassembly/main.c
++++ b/ports/webassembly/main.c
+@@ -52,7 +52,9 @@ static size_t external_call_depth = 0;
+ #endif
+ 
+ // Emscripten defaults to a 64k C-stack, so our limit should be less than that.
++#ifndef CSTACK_SIZE
+ #define CSTACK_SIZE (32 * 1024)
++#endif
+ 
+ #if MICROPY_GC_SPLIT_HEAP_AUTO
+ static void gc_collect_top_level(mp_obj_t root_obj);
+@@ -77,12 +79,28 @@ void mp_js_init(int pystack_size, int heap_size) {
+     mp_cstack_init_with_sp_here(CSTACK_SIZE);
+ 
+     #if MICROPY_ENABLE_PYSTACK
++    #if MICROPY_PICOBOY_EMU
++    // Jeder Testlauf ist ein echter Neustart wie Strg-D am Geraet: derselbe
++    // Speicher wird neu aufgesetzt, statt jedes Mal neuen zu holen.
++    static mp_obj_t *pystack = NULL;
++    if (pystack == NULL) {
++        pystack = (mp_obj_t *)malloc(pystack_size * sizeof(mp_obj_t));
++    }
++    #else
+     mp_obj_t *pystack = (mp_obj_t *)malloc(pystack_size * sizeof(mp_obj_t));
++    #endif
+     mp_pystack_init(pystack, pystack + pystack_size);
+     #endif
+ 
+     #if MICROPY_ENABLE_GC
++    #if MICROPY_PICOBOY_EMU
++    static char *heap = NULL;
++    if (heap == NULL) {
++        heap = (char *)malloc(heap_size * sizeof(char));
++    }
++    #else
+     char *heap = (char *)malloc(heap_size * sizeof(char));
++    #endif
+     gc_init(heap, heap + heap_size);
+     #endif
+ 
+@@ -96,6 +114,10 @@ void mp_js_init(int pystack_size, int heap_size) {
+ 
+     mp_init();
+ 
++    #if MICROPY_PICOBOY_EMU
++    pb_nach_init();
++    #endif
++
+     #if MICROPY_VFS_POSIX
+     {
+         // Mount the host FS at the root of our internal VFS
+@@ -216,7 +238,9 @@ static void gc_scan_func(void *begin, void *end) {
+ void gc_collect(void) {
+     gc_collect_start();
+     emscripten_scan_stack(gc_scan_func);
++    #if !MICROPY_PICOBOY_EMU
+     emscripten_scan_registers(gc_scan_func);
++    #endif
+     gc_collect_end();
+ }
+ 
+diff --git a/ports/webassembly/mpconfigport.h b/ports/webassembly/mpconfigport.h
+index b4aad22db..da62ae2e7 100644
+--- a/ports/webassembly/mpconfigport.h
++++ b/ports/webassembly/mpconfigport.h
+@@ -40,7 +40,9 @@
+ 
+ #define MICROPY_ALLOC_PATH_MAX      (256)
+ #define MICROPY_PERSISTENT_CODE_LOAD (1)
++#ifndef MICROPY_COMP_ALLOW_TOP_LEVEL_AWAIT
+ #define MICROPY_COMP_ALLOW_TOP_LEVEL_AWAIT (1)
++#endif
+ #define MICROPY_READER_VFS          (MICROPY_VFS)
+ #define MICROPY_ENABLE_GC           (1)
+ #define MICROPY_ENABLE_PYSTACK      (1)
+@@ -50,21 +52,31 @@
+ #define MICROPY_ENABLE_DOC_STRING   (1)
+ #define MICROPY_WARNINGS            (1)
+ #define MICROPY_ERROR_PRINTER       (&mp_stderr_print)
++#ifndef MICROPY_FLOAT_IMPL
+ #define MICROPY_FLOAT_IMPL          (MICROPY_FLOAT_IMPL_DOUBLE)
++#endif
+ #define MICROPY_USE_INTERNAL_ERRNO  (1)
+ #define MICROPY_USE_INTERNAL_PRINTF (0)
+ 
+ #define MICROPY_EPOCH_IS_1970       (1)
++#ifndef MICROPY_PY_ASYNCIO_TASK_QUEUE_PUSH_CALLBACK
+ #define MICROPY_PY_ASYNCIO_TASK_QUEUE_PUSH_CALLBACK (1)
++#endif
+ #define MICROPY_PY_RANDOM_SEED_INIT_FUNC (mp_js_random_u32())
+ #define MICROPY_PY_TIME_GMTIME_LOCALTIME_MKTIME (1)
+ #define MICROPY_PY_TIME_TIME_TIME_NS (1)
++#ifndef MICROPY_PY_TIME_INCLUDEFILE
+ #define MICROPY_PY_TIME_INCLUDEFILE "ports/webassembly/modtime.c"
++#endif
+ #ifndef MICROPY_VFS
+ #define MICROPY_VFS                 (1)
+ #endif
++#ifndef MICROPY_VFS_POSIX
+ #define MICROPY_VFS_POSIX           (MICROPY_VFS)
++#endif
++#ifndef MICROPY_PY_SYS_PLATFORM
+ #define MICROPY_PY_SYS_PLATFORM     "webassembly"
++#endif
+ 
+ #ifndef MICROPY_PY_JS
+ #define MICROPY_PY_JS (MICROPY_CONFIG_ROM_LEVEL_AT_LEAST_EXTRA_FEATURES)
+@@ -98,8 +110,12 @@
+ 
+ typedef long mp_off_t;
+ 
++#ifndef MICROPY_HW_BOARD_NAME
+ #define MICROPY_HW_BOARD_NAME "JS"
++#endif
++#ifndef MICROPY_HW_MCU_NAME
+ #define MICROPY_HW_MCU_NAME "Emscripten"
++#endif
+ 
+ #define MP_STATE_PORT MP_STATE_VM
+ 
+diff --git a/ports/webassembly/mphalport.c b/ports/webassembly/mphalport.c
+index 3935068b9..01138d49d 100644
+--- a/ports/webassembly/mphalport.c
++++ b/ports/webassembly/mphalport.c
+@@ -30,15 +30,27 @@
+ 
+ static void stderr_print_strn(void *env, const char *str, size_t len) {
+     (void)env;
++    #if MICROPY_PICOBOY_EMU
++    extern void pb_js_aus(const char *s, int n);
++    pb_js_aus(str, len);
++    #else
+     write(2, str, len);
++    #endif
+ }
+ 
+ const mp_print_t mp_stderr_print = {NULL, stderr_print_strn};
+ 
+ mp_uint_t mp_hal_stdout_tx_strn(const char *str, size_t len) {
++    #if MICROPY_PICOBOY_EMU
++    extern void pb_js_aus(const char *s, int n);
++    pb_js_aus(str, len);
++    return len;
++    #else
+     return write(1, str, len);
++    #endif
+ }
+ 
++#if !MICROPY_PICOBOY_EMU
+ void mp_hal_delay_ms(mp_uint_t ms) {
+     uint32_t start = mp_hal_ticks_ms();
+     while (mp_hal_ticks_ms() - start < ms) {
+@@ -63,6 +75,8 @@ mp_uint_t mp_hal_ticks_cpu(void) {
+     return 0;
+ }
+ 
++#endif
++
+ uint64_t mp_hal_time_ms(void) {
+     double mm = mp_js_time_ms();
+     return (uint64_t)mm;
+diff --git a/ports/webassembly/mphalport.h b/ports/webassembly/mphalport.h
+index cd22383ee..55db2e01e 100644
+--- a/ports/webassembly/mphalport.h
++++ b/ports/webassembly/mphalport.h
+@@ -28,6 +28,10 @@
+ #include "shared/runtime/interrupt_char.h"
+ 
+ #define mp_hal_stdin_rx_chr() (0)
++#if MICROPY_PICOBOY_EMU
++#include "py/ringbuf.h"
++extern ringbuf_t stdin_ringbuf;
++#endif
+ mp_uint_t mp_hal_stdout_tx_strn(const char *str, size_t len);
+ 
+ void mp_hal_delay_ms(mp_uint_t ms);
+diff --git a/py/compile.c b/py/compile.c
+index 263f45676..819064ca2 100644
+--- a/py/compile.c
++++ b/py/compile.c
+@@ -848,6 +848,12 @@ static bool compile_built_in_decorator(compiler_t *comp, size_t name_len, mp_par
+     qstr attr = MP_PARSE_NODE_LEAF_ARG(name_nodes[1]);
+     if (attr == MP_QSTR_bytecode) {
+         *emit_options = MP_EMIT_OPT_BYTECODE;
++    #if MICROPY_PICOBOY_EMU
++    // Der Emulator hat keinen ARM-Codeerzeuger: solche Funktionen laufen
++    // als Bytecode, das Programm bleibt lauffaehig.
++    } else if (attr == MP_QSTR_native || attr == MP_QSTR_viper) {
++        *emit_options = MP_EMIT_OPT_BYTECODE;
++    #endif
+     #if MICROPY_EMIT_NATIVE
+     } else if (attr == MP_QSTR_native) {
+         *emit_options = MP_EMIT_OPT_NATIVE_PYTHON;
+diff --git a/py/modmicropython.c b/py/modmicropython.c
+index 35ca98eb8..bc245971e 100644
+--- a/py/modmicropython.c
++++ b/py/modmicropython.c
+@@ -116,7 +116,7 @@ static mp_obj_t mp_micropython_stack_use(void) {
+ static MP_DEFINE_CONST_FUN_OBJ_0(mp_micropython_stack_use_obj, mp_micropython_stack_use);
+ #endif
+ 
+-#if MICROPY_ENABLE_PYSTACK
++#if MICROPY_ENABLE_PYSTACK && !MICROPY_PICOBOY_EMU
+ static mp_obj_t mp_micropython_pystack_use(void) {
+     return MP_OBJ_NEW_SMALL_INT(mp_pystack_usage());
+ }
+@@ -209,7 +209,7 @@ static const mp_rom_map_elem_t mp_module_micropython_globals_table[] = {
+     #if MICROPY_ENABLE_EMERGENCY_EXCEPTION_BUF && (MICROPY_EMERGENCY_EXCEPTION_BUF_SIZE == 0)
+     { MP_ROM_QSTR(MP_QSTR_alloc_emergency_exception_buf), MP_ROM_PTR(&mp_alloc_emergency_exception_buf_obj) },
+     #endif
+-    #if MICROPY_ENABLE_PYSTACK
++    #if MICROPY_ENABLE_PYSTACK && !MICROPY_PICOBOY_EMU
+     { MP_ROM_QSTR(MP_QSTR_pystack_use), MP_ROM_PTR(&mp_micropython_pystack_use_obj) },
+     #endif
+     #if MICROPY_ENABLE_GC
