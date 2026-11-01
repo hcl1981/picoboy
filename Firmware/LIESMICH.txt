@@ -1,0 +1,214 @@
+========================================================================
+MicroPython 1.29.0 fuer den PicoBoy -- mit eingebauter picoboy.py
+========================================================================
+Datei:  PicoBoy-MicroPython-1.29.0.uf2   (680 KB)
+Basis:  MicroPython v1.29.0 (Release vom 24.08.2026), Port rp2
+Board:  PICOBOY (abgeleitet vom Raspberry Pi Pico, RP2040, 2 MB Flash)
+SHA256: 4d0cd7d228b3812a68768d099ac250b385c8922b02818c6a66c8f1369da3de15
+
+
+------------------------------------------------------------------------
+AUFSPIELEN
+------------------------------------------------------------------------
+1. BOOT-Taste auf der Rueckseite gedrueckt halten, dabei RES kurz
+   druecken, dann BOOT loslassen.
+2. Am Computer erscheint ein Laufwerk RPI-RP2.
+3. PicoBoy-MicroPython-1.29.0.uf2 darauf kopieren.
+4. Das Laufwerk verschwindet, der PicoBoy startet neu.
+
+Eigene Programme bleiben beim Flashen erhalten. Die .uf2 beschreibt nur
+den Firmware-Bereich des Flash (bis 0x10055000); das Dateisystem mit den
+Programmen beginnt erst bei 0x100A0000 und wird nicht angefasst.
+
+
+------------------------------------------------------------------------
+WAS IST ANDERS ALS BEIM STANDARD-MICROPYTHON?
+------------------------------------------------------------------------
+
+1. picoboy.py steckt FEST IN DER FIRMWARE
+   --------------------------------------
+   "from picoboy import PicoBoy" funktioniert sofort nach dem Flashen.
+   Die Datei muss nicht mehr von Hand uebertragen werden und taucht auch
+   nicht in der Dateiliste auf -- sie liegt im Programmspeicher, nicht
+   im Dateisystem. Man kann sie folglich auch nicht versehentlich
+   loeschen oder ueberschreiben.
+
+   Ausnahme: Liegt im Speicher noch eine picoboy.py (etwa von einer
+   frueheren Installation nach der Anleitung auf picoboy.de), dann hat
+   DIESE Vorrang -- Python sucht zuerst im Speicher und erst danach in
+   der Firmware (sys.path = ['', '.frozen', ...]). Die alte Datei also
+   loeschen oder umbenennen. PicoBoy Studio bietet das bei "Startmenue
+   installieren..." automatisch an.
+
+   Gegenueber der frueheren Fassung von picoboy.de ist eine Stelle geaendert
+   (31.10.2026). Die Vorgaengerfassung mit der unveraenderten
+   picoboy.py liegt im Projekt unter archiv/.
+
+   Was geaendert ist: write_cmd() und write_data() riefen bei
+       JEDEM Aufruf spi.init(baudrate=...) neu auf. Jetzt wird
+       der SPI-Bus einmal im Konstruktor eingestellt.
+
+       Am Geraet gemessen:
+
+                            vorher     nachher
+           pb.show(True)   22,2 ms    12,4 ms
+           ein Spielbild   28,4 ms    18,5 ms
+           Bilder/Sekunde       35         54
+
+       Der SH1106-Treiber, von dem picoboy.py abstammt
+       (github.com/robert-hh/SH1106), macht kein spi.init() in diesen
+       Methoden -- die Zeile war in der PicoBoy-Klasse zugefuegt.
+       Zeile fuer Zeile verglichen ist sie der einzige Unterschied.
+       Entfernen stellt also das Verhalten des Originaltreibers her.
+
+       Zulaessig ist das, weil am SPI0 (sck=18, mosi=19) nur das
+       Display haengt. Das eine init() im Konstruktor ist noetig und
+       muss VOR super().__init__() stehen: der Bus wird mit 1 MHz,
+       polarity=1, phase=1 erzeugt, das Display laeuft mit 8 MHz,
+       polarity=0, phase=0 -- und init_display() schickt schon
+       Kommandos.
+
+       Welche .uf2 PicoBoy Studio anbietet, steht in index.html bei
+       FIRMWARE_UF2.
+
+   Nebeneffekt: sie belegt keinen Platz im 1408 KB grossen Dateisystem,
+   und das Startmenue muss sie nicht mehr aus der Programmliste
+   herausfiltern.
+
+2. startmenu -- das Startmenue, ebenfalls in der Firmware
+   ------------------------------------------------------
+   Listet alle .py-Dateien im Speicher auf und startet die ausgewaehlte.
+   Joystick hoch/runter waehlt, druecken startet.
+
+   Von Hand aufrufen laesst es sich jederzeit:
+
+       import startmenu
+       startmenu.run()
+
+3. main.py -- die Autostart-Datei
+   ------------------------------
+   Beim ersten Start legt der PicoBoy eine main.py im Speicher an --
+   allerdings nur, wenn er dabei das Dateisystem neu anlegen muss, also
+   bei einem neuen Geraet oder einem, auf dem vorher kein MicroPython
+   lief. Sie ist bewusst kurz:
+
+       import startmenu
+       startmenu.run()
+
+   Das ist eine ganz normale Datei im Dateisystem:
+     - sie taucht in jeder Dateiliste auf (os.listdir(), Thonny,
+       "Dateien verwalten..." in PicoBoy Studio)
+     - man kann sie oeffnen, aendern und ueberschreiben
+     - man kann sie loeschen -- dann startet der PicoBoy einfach in
+       die Konsole, ohne Menue
+
+   Geloescht bleibt geloescht: main.py wird nur angelegt, wenn das
+   Dateisystem frisch formatiert wurde.
+
+   War auf dem PicoBoy vorher schon MicroPython, bleibt sein Speicher
+   beim Flashen erhalten -- dann wird KEINE main.py angelegt. In dem
+   Fall das Startmenue einmal selbst einrichten, entweder in PicoBoy
+   Studio ueber "Dateien -> Startmenue installieren..." oder mit:
+
+       import startmenu
+       startmenu.restore()
+
+
+------------------------------------------------------------------------
+VERBESSERUNGEN AM STARTMENUE
+------------------------------------------------------------------------
+Gegenueber der menu.py aus dem GitHub-Repository:
+
+  - Ein abstuerzendes Programm reisst das Menue nicht mehr mit. Statt
+    dessen erscheint kurz die Fehlerart ("ValueError"), ein Druck auf
+    den Joystick fuehrt zurueck ins Menue.
+  - Nach jedem Programm gehen LEDs und Lautsprecher wieder aus.
+  - Das Menue wartet, bis der Joystick losgelassen ist, bevor es ein
+    Programm startet. Sonst sieht das gerade gestartete Programm den
+    Tastendruck sofort noch einmal.
+  - Lange Dateinamen werden abgeschnitten ("sehr_langer_p~") statt
+    ueber den Bildschirmrand hinauszulaufen. Alle Texte des Menues
+    passen nachgerechnet in 128 Pixel.
+  - Die Programmliste wird alle zwei Sekunden aufgefrischt, ein frisch
+    hochgeladenes Programm taucht also von selbst auf.
+  - Gezeichnet wird nur, wenn sich etwas geaendert hat.
+
+
+------------------------------------------------------------------------
+SPEICHERAUFTEILUNG
+------------------------------------------------------------------------
+  Firmware        340 KB   von 640 KB   (53 %)
+  Dateisystem    1408 KB                (voll verfuegbar fuer Programme)
+  RAM              25 KB   von 256 KB   beim Start belegt
+
+Die Firmware endet bei 0x10054F00, das Dateisystem beginnt bei
+0x100A0000 -- sie kommen sich also nicht ins Gehege.
+
+
+------------------------------------------------------------------------
+SELBST NEU BAUEN
+------------------------------------------------------------------------
+Im Ordner quelltext/ liegt die komplette Board-Definition. So wird
+daraus wieder eine .uf2:
+
+    git clone https://github.com/micropython/micropython.git
+    cd micropython
+    git checkout v1.29.0
+    cp -r /pfad/zu/quelltext ports/rp2/boards/PICOBOY
+    make -C ports/rp2 BOARD=PICOBOY submodules
+    make -C ports/rp2 BOARD=PICOBOY -j$(nproc)
+
+    Ergebnis: ports/rp2/build-PICOBOY/firmware.uf2
+
+Gebraucht werden arm-none-eabi-gcc, cmake und make.
+
+STOLPERFALLE: Wer cmake zusaetzliche Optionen mitgeben will, darf
+CMAKE_ARGS NICHT einfach auf der Kommandozeile setzen -- make
+ueberschreibt damit auch die Zuweisungen im Makefile, unter anderem
+-DMICROPY_BOARD. Das Ergebnis ist dann eine ganz normale
+Pico-Firmware, die aeusserlich genauso aussieht. Wenn noetig, die
+Board-Optionen mit angeben:
+
+    make -C ports/rp2 BOARD=PICOBOY \
+      CMAKE_ARGS="-DMICROPY_BOARD=PICOBOY \
+                  -DMICROPY_BOARD_DIR=$PWD/ports/rp2/boards/PICOBOY \
+                  ..."
+
+
+------------------------------------------------------------------------
+WAS GEPRUEFT IST -- UND WAS NICHT
+------------------------------------------------------------------------
+Geprueft:
+  - Die .uf2 ist strukturell fehlerfrei: 1360 Bloecke, alle Magic-Werte
+    und Blocknummern korrekt, Family-ID 0xe48bff56 (RP2040).
+  - "PicoBoy" steht als Board-Name im Binary, nicht "Raspberry Pi Pico".
+  - picoboy.py und startmenu sind nachweislich in der Firmware.
+  - Kein einziger Block der .uf2 liegt im Dateisystem-Bereich; eigene
+    Programme ueberstehen das Flashen also.
+  - Die Logik von startmenu.py lief gegen echtes MicroPython (1.29,
+    WASM-Build) mit nachgebauter Hardware: Dateiliste, Seitenanzeige,
+    Namenskuerzung, restore(), Absturzbehandlung, leerer Speicher.
+
+  - Am 31.10.2026 auf einem echten PicoBoy aufgespielt und geprueft:
+    Display zeichnet (fill, text, rect, fill_rect,
+    show), Joystick antwortet, Beschleunigungssensor liefert Werte,
+    Zeichentempo gemessen. Aufgespielt wurde ueber den
+    Massenspeicher-Bootloader; in den BOOTSEL-Modus kommt das Geraet
+    auch ohne Tastendruck mit "import machine; machine.bootloader()".
+
+NICHT geprueft:
+  - Die LEDs und der Lautsprecher wurden nicht einzeln angesehen.
+  - Die Firmware lief nicht ueber laengere Zeit in einer Klasse.
+
+Vor dem Verteilen an eine Klasse deshalb bitte einmal auf einem
+Geraet ausprobieren. Falls etwas schiefgeht: die normale
+MicroPython-Firmware von micropython.org/download/RPI_PICO/ laesst
+sich jederzeit genauso wieder aufspielen.
+
+
+Aenderungen vom 01.11.2026 (am Geraet geprueft)
+-----------------------------------------------
+picoboy.py: pixel() mit y ausserhalb des Displays brach mit ValueError ab;
+zAcc() nutzt ">= 2048" wie xAcc und yAcc.
+startmenu.py: sys.exit() in einem Programm fuehrt zurueck ins Menue;
+_aufraeumen() schaltet das Display wieder ein und hebt die Invertierung auf.
