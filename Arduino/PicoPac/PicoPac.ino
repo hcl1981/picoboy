@@ -31,6 +31,7 @@ U8G2_SH1106_128X64_NONAME_F_4W_HW_SPI u8g2(U8G2_R3, /* cs=*/10, /* dc=*/8, /* re
 #include "HWTest/hwtest.h"
 #include "Memor/memor.h"
 #include "Sensy/sensy.h"
+#include "OledPong/oledpong.h"
 
 void setup(void)
 {
@@ -59,7 +60,11 @@ void setup(void)
   {
     eepromWriteInt(8, 0);
   }
-  
+  if (eepromReadInt(10) >= 65500)
+  {
+    eepromWriteInt(10, 0);
+  }
+
   u8g2.begin();
 
   u8g2.setContrast(31);
@@ -123,7 +128,12 @@ void setup(void)
     Sensy sen(u8g2);
     sen.run();
   }
-  
+  else if (gameID == 9)
+  {
+    OledPong oledpong(u8g2);
+    oledpong.run();
+  }
+
 }
 
 void loop() {}
