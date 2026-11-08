@@ -21,7 +21,8 @@ class StarIntro {
 		int eescoreTM = eepromReadInt(4);
 		int eescoreWNR = eepromReadInt(6);
 		int eescoreMEM = eepromReadInt(8);
-		
+		int eescoreOP = eepromReadInt(10);
+
 		for (int i = 0; i < numstars; i++)
 		{
 			stars[i][0] = 33;
@@ -37,7 +38,7 @@ class StarIntro {
 			u8g2.clearBuffer();
 			u8g2.setCursor(32 - u8g2.getStrWidth("PicoPac!") / 2, 15);
 			u8g2.println("PicoPac!");
-			if (millis() % 7500 < 1500)
+			if (millis() % 9000 < 1500)
 			{
 				u8g2.setCursor(32 - u8g2.getStrWidth("PICTRIS") / 2, 75);
 				u8g2.println("PICTRIS");
@@ -48,7 +49,7 @@ class StarIntro {
 				u8g2.setCursor(32 - u8g2.getStrWidth(cstr) / 2, 90);
 				u8g2.println(cstr);
 			}
-			else if (millis() % 7500 < 3000)
+			else if (millis() % 9000 < 3000)
 			{
 				u8g2.setCursor(32 - u8g2.getStrWidth("SCLANGE") / 2, 75);
 				u8g2.println("SCLANGE");
@@ -59,7 +60,7 @@ class StarIntro {
 				u8g2.setCursor(32 - u8g2.getStrWidth(cstr) / 2, 90);
 				u8g2.println(cstr);
 			}
-			else if (millis() % 7500 < 4500)
+			else if (millis() % 9000 < 4500)
 			{
 				u8g2.setCursor(32 - u8g2.getStrWidth("TABMAN") / 2, 75);
 				u8g2.println("TABMAN");
@@ -70,7 +71,7 @@ class StarIntro {
 				u8g2.setCursor(32 - u8g2.getStrWidth(cstr) / 2, 90);
 				u8g2.println(cstr);
 			}
-			else if (millis() % 7500 < 6000)
+			else if (millis() % 9000 < 6000)
 			{
 				u8g2.setCursor(32 - u8g2.getStrWidth("W'n'R") / 2, 75);
 				u8g2.println("W'n'R");
@@ -81,7 +82,8 @@ class StarIntro {
 				u8g2.setCursor(32 - u8g2.getStrWidth(cstr) / 2, 90);
 				u8g2.println(cstr);
 			}
-			else {
+			else if (millis() % 9000 < 7500)
+			{
 				int mins = eescoreMEM / 600;
 				int secs = (eescoreMEM / 10) % 60;
 				int tens = eescoreMEM % 10;
@@ -97,7 +99,17 @@ class StarIntro {
 				u8g2.setCursor(32 - u8g2.getStrWidth(timeString) / 2, 90);
 				u8g2.println(timeString);
 			}
-			if ( millis() % 600 < 150) {
+		    else {
+                u8g2.setCursor(32 - u8g2.getStrWidth("OLEDPONG") / 2, 75);
+                u8g2.println("OLEDPONG");
+                u8g2.setCursor(32 - u8g2.getStrWidth("HI-SCORE") / 2, 60);
+                u8g2.println("HI-SCORE");
+                char cstr[16];
+                itoa(eescoreOP, cstr, 10);
+                u8g2.setCursor(32 - u8g2.getStrWidth(cstr) / 2, 90);
+                u8g2.println(cstr);
+			}
+            if ( millis() % 600 < 150) {
 				analogWrite(LEDR, 65);
 				analogWrite(LEDY, 0);
 				analogWrite(LEDG, 0);
@@ -176,7 +188,14 @@ class StarIntro {
 			u8g2.setCursor(32 - u8g2.getStrWidth("HWTest") / 2, 123);
 			u8g2.println("HWTest");
 			}
-			
+			else if (gameID == 9)
+			{
+			u8g2.setCursor(32 - u8g2.getStrWidth("<        >") / 2, 123);
+			u8g2.println("<        >");
+			u8g2.setCursor(32 - u8g2.getStrWidth("OLEDPONG") / 2, 123);
+			u8g2.println("OLEDPONG");
+			}
+
 			}    for (int i = 0; i < numstars; i++)
 			{
 			
@@ -202,14 +221,14 @@ class StarIntro {
 			{
 			gameID = gameID - 1;
 			if (gameID == 0)
-			gameID = 8;//2
+			gameID = 9;//2
 			lastSelection = millis();
 			// break;
 			}
 			else if (digitalRead(KEY_UP) == LOW && millis() > lastSelection + 200)
 			{
 			gameID = gameID + 1;
-			if (gameID == 9)//3
+			if (gameID == 10)//3
 			gameID = 1;
 			lastSelection = millis();
 			// break;
